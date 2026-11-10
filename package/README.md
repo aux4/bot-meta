@@ -67,6 +67,7 @@ config:
         verifyToken: ${WHATSAPP_VERIFY_TOKEN}       # a string YOU choose; entered into the Meta dashboard
         appSecret: ${WHATSAPP_APP_SECRET}           # App Settings -> Basic -> App Secret
         token: ${WHATSAPP_ACCESS_TOKEN}             # a permanent system-user access token
+        maxMediaBytes: 26214400                     # optional — cap on a single media download, default 25 MB
         command: "aux4 ai agent ask --instructions support.md"
 ```
 
@@ -133,6 +134,14 @@ Media arrives as an opaque id, not a URL. `download` makes two Bearer-
 authenticated Graph API calls: `GET /{media-id}` resolves it to a
 time-limited CDN `url` (plus `mime_type`), then that URL is fetched directly
 and written to `tmpDir/<media-id><ext>`.
+
+The download is capped at `bots.<id>.maxMediaBytes` (default **25 MB**). The
+cap is checked against the response's `Content-Length` up front when
+present, and against the running total while streaming otherwise — the
+download is aborted the moment the cap is exceeded rather than buffering an
+oversized file into memory first. A file over the cap is skipped (`download`
+returns a null path) instead of failing the whole message; the brain simply
+runs without that attachment.
 
 ## Formatting and the 4096-char split
 

@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.1.1
+
+Review follow-up from the BOT-004 dev review.
+
+- **Media download byte cap.** `lib/graph.js`'s `fetchBinary` (used by
+  `download` for both WhatsApp media and the future Messenger/Instagram
+  reuse) now enforces `bots.<id>.maxMediaBytes` (default 25 MB): rejected
+  up front against `Content-Length` when present, and aborted mid-stream
+  against a running total otherwise, instead of buffering the whole body
+  into memory first. A file over the cap is skipped (`download` returns a
+  null path) rather than failing the message.
+- README: documented `maxMediaBytes` in the main config example and the
+  "Media download" section.
+
 ## 0.1.0
 
 Initial release — the `whatsapp` channel plugin for `aux4/bot`.
