@@ -1,0 +1,8 @@
+node_modules/
+package/lib/
+package/*.zip
+.bot/
+*.log
+.DS_Store
+*.tgz
+.env

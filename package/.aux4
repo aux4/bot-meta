@@ -1,0 +1,146 @@
+{
+  "scope": "aux4",
+  "name": "bot-meta",
+  "version": "0.1.0",
+  "description": "Meta (WhatsApp, Messenger, Instagram) channel plugin for aux4/bot",
+  "dependencies": [
+    "aux4/bot"
+  ],
+  "system": [
+    [
+      "test:node --version",
+      "brew:node"
+    ]
+  ],
+  "profiles": [
+    {
+      "name": "bot",
+      "commands": [
+        {
+          "name": "whatsapp",
+          "execute": [
+            "profile:bot:whatsapp"
+          ],
+          "help": {
+            "text": "The 'whatsapp' channel plugin — WhatsApp Cloud API (Graph API) transport for aux4/bot"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bot:whatsapp",
+      "commands": [
+        {
+          "name": "verify",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-verify"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: GET hub.challenge handshake, or POST X-Hub-Signature-256 verification over the raw body"
+          }
+        },
+        {
+          "name": "ingest-parse",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-ingest-parse"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: parse a Graph API webhook payload into normalized core events (messages only; statuses are skipped)"
+          }
+        },
+        {
+          "name": "typing",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-typing"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: mark the inbound message read and raise the typing indicator"
+          }
+        },
+        {
+          "name": "download",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-download"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: resolve a media id to a CDN URL and download it to local disk"
+          }
+        },
+        {
+          "name": "format",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-format"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: convert the brain's Markdown answer into WhatsApp's own text markup"
+          }
+        },
+        {
+          "name": "send",
+          "private": true,
+          "noHooks": true,
+          "execute": [
+            "stdin:node ${packageDir}/lib/bot-meta.mjs whatsapp-send"
+          ],
+          "help": {
+            "text": "WhatsApp plugin: deliver the formatted reply, splitting into multiple messages past the 4096-char limit"
+          }
+        },
+        {
+          "name": "send-template",
+          "execute": [
+            "node ${packageDir}/lib/bot-meta.mjs whatsapp-send-template values(bots, defaults, botId, to, template, languageCode, params)"
+          ],
+          "help": {
+            "text": "Send a pre-approved WhatsApp Message Template, for replying outside the 24h free-form session window",
+            "variables": [
+              {
+                "name": "bots",
+                "text": "Map of botId -> per-bot config (JSON object)",
+                "default": "{}"
+              },
+              {
+                "name": "defaults",
+                "text": "Shared defaults merged under every bot (JSON object)",
+                "default": "{}"
+              },
+              {
+                "name": "botId",
+                "text": "Which configured bot to send as",
+                "arg": true
+              },
+              {
+                "name": "to",
+                "text": "Recipient phone number (E.164, no leading +)"
+              },
+              {
+                "name": "template",
+                "text": "Approved template name"
+              },
+              {
+                "name": "languageCode",
+                "text": "Template language/locale code",
+                "default": "en_US"
+              },
+              {
+                "name": "params",
+                "text": "Body parameter values, as a JSON array of strings",
+                "default": "[]"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
