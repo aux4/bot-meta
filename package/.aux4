@@ -1,7 +1,7 @@
 {
   "scope": "aux4",
   "name": "bot-meta",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Meta (WhatsApp, Messenger, Instagram) channel plugin for aux4/bot",
   "dependencies": [
     "aux4/bot"
