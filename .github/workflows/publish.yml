@@ -80,6 +80,8 @@ jobs:
         with:
           command: test
           build_command: npm run build
+          # e2e tests stand in for the Meta Graph API with aux4/mock
+          packages: aux4/mock
 
   publish:
     needs: [lint, test-linux]
