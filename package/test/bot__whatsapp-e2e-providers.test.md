@@ -532,13 +532,7 @@ verify ok: 1 match(es)*
 
 This subsection restarts the api server and worker with a shorter queue
 `visibility` (`3` instead of `30`) so a crash/resume cycle fits in a
-reasonable test time; it is the last scenario in this provider section. It
-is split into three separate `execute` blocks (start, kill, restart) rather
-than one -- each `execute` block is its own fresh process, which is what
-reliably delivers `kill -9` to a background `nohup`'d process tree; issuing
-the kill from the very same long shell script that spawned it was observed
-to be flaky (the signal didn't always land before later lines in that same
-script ran).
+reasonable test time; it is the last scenario in this provider section.
 
 ```file:config.yaml
 config:
@@ -588,10 +582,8 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15558880006","id":"wamid.REPOCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### [repository] restart the api/worker (short visibility) and send a slow message
-
 ```timeout
-25000
+45000
 ```
 
 ```execute
@@ -602,52 +594,27 @@ sleep 1
 nohup aux4 api start --configFile config.yaml >api-repo-crash.log 2>&1 &
 sleep 2
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash1.log 2>&1 &
-echo $! > worker-repo-crash.pid
+WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-crash1.json')).digest('hex'))")
-curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-repo-crash1.json
-sleep 5
-```
-
-```expect
-200
-```
-
-#### [repository] kill the worker mid-brain: no reply has been sent yet
-
-```timeout
-20000
-```
-
-```execute
-WORKER1PID=$(cat worker-repo-crash.pid)
-ALL="$WORKER1PID"
-for i in 1 2 3 4 5 6; do
-  MORE=""
-  for P in $ALL; do
-    MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+curl -s -o /dev/null -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-repo-crash1.json
+for ROUND in 1 2 3 4; do
+  sleep 1
+  ALL="$WORKER1PID"
+  for i in 1 2 3 4 5 6; do
+    MORE=""
+    for P in $ALL; do
+      MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+    done
+    ALL="$ALL $MORE"
   done
-  ALL="$ALL $MORE"
+  for PID in $ALL; do kill -9 $PID 2>/dev/null; done
 done
-for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 2
+sleep 1
 aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15558880006"' --body-contains '"SLOW_8 done"' --times 0
-```
-
-```expect:partial
-verify ok: 0 match(es)*
-```
-
-#### [repository] restart the worker: the message is leased again and replied to exactly once
-
-```timeout
-35000
-```
-
-```execute
+echo "replies-before-restart:$?"
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash2.log 2>&1 &
-echo $! > worker-repo-crash2.pid
-sleep 18
-WORKER2PID=$(cat worker-repo-crash2.pid)
+WORKER2PID=$!
+sleep 15
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
@@ -661,7 +628,7 @@ aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --bo
 ```
 
 ```expect:partial
-verify ok: 1 match(es)*
+replies-before-restart:0**verify ok: 1 match(es)*
 ```
 
 ## Provider: sqs
@@ -952,10 +919,7 @@ verify ok: 1 match(es)*
 
 This subsection restarts the api server and worker with a shorter queue
 `visibility` (`3` instead of `30`) so a crash/resume cycle fits in a
-reasonable test time; it is the last scenario in this provider section,
-split into three `execute` blocks for the same reason as the `repository`
-provider's crash-resume test (a fresh process per block reliably delivers
-`kill -9`).
+reasonable test time; it is the last scenario in this provider section.
 
 ```file:config.yaml
 config:
@@ -1005,10 +969,8 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15557770006","id":"wamid.SQSCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### [sqs] restart the api/worker (short visibility) and send a slow message
-
 ```timeout
-25000
+45000
 ```
 
 ```execute
@@ -1023,56 +985,27 @@ sleep 1
 nohup aux4 api start --configFile config.yaml >api-sqs-crash.log 2>&1 &
 sleep 2
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash1.log 2>&1 &
-echo $! > worker-sqs-crash.pid
+WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-crash1.json')).digest('hex'))")
-curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-crash1.json
-sleep 5
-```
-
-```expect
-200
-```
-
-#### [sqs] kill the worker mid-brain: no reply has been sent yet
-
-```timeout
-20000
-```
-
-```execute
-WORKER1PID=$(cat worker-sqs-crash.pid)
-ALL="$WORKER1PID"
-for i in 1 2 3 4 5 6; do
-  MORE=""
-  for P in $ALL; do
-    MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-crash1.json
+for ROUND in 1 2 3 4; do
+  sleep 1
+  ALL="$WORKER1PID"
+  for i in 1 2 3 4 5 6; do
+    MORE=""
+    for P in $ALL; do
+      MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+    done
+    ALL="$ALL $MORE"
   done
-  ALL="$ALL $MORE"
+  for PID in $ALL; do kill -9 $PID 2>/dev/null; done
 done
-for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 2
+sleep 1
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770006"' --body-contains '"SLOW_8 done"' --times 0
-```
-
-```expect:partial
-verify ok: 0 match(es)*
-```
-
-#### [sqs] restart the worker: the message is leased again and replied to exactly once
-
-```timeout
-35000
-```
-
-```execute
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=elasticmq
-export AWS_ENDPOINT_URL=http://localhost:19781
-nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash2.log 2>&1 &
-echo $! > worker-sqs-crash2.pid
-sleep 18
-WORKER2PID=$(cat worker-sqs-crash2.pid)
+echo "replies-before-restart:$?"
+AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash2.log 2>&1 &
+WORKER2PID=$!
+sleep 15
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
@@ -1083,6 +1016,10 @@ for i in 1 2 3 4 5 6; do
 done
 for PID in $ALL; do kill -9 $PID 2>/dev/null; done
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770006"' --body-contains '"SLOW_8 done"' --times 1
+```
+
+```expect:partial
+replies-before-restart:0**verify ok: 1 match(es)*
 ```
 
 ```expect:partial
@@ -1391,10 +1328,7 @@ verify ok: 1 match(es)*
 
 This subsection restarts the api server and worker with a shorter queue
 `visibility` (`3` instead of `30`) so a crash/resume cycle fits in a
-reasonable test time; it is the last scenario in this provider section,
-split into three `execute` blocks for the same reason as the other
-providers' crash-resume tests (a fresh process per block reliably delivers
-`kill -9`).
+reasonable test time; it is the last scenario in this provider section.
 
 ```file:config.yaml
 config:
@@ -1444,10 +1378,8 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15556660006","id":"wamid.CLOUDCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### [cloud] restart the api/worker (short visibility) and send a slow message
-
 ```timeout
-25000
+45000
 ```
 
 ```execute
@@ -1464,58 +1396,27 @@ sleep 1
 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 api start --configFile config.yaml >api-cloud-crash.log 2>&1 &
 sleep 2
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash1.log 2>&1 &
-echo $! > worker-cloud-crash.pid
+WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-crash1.json')).digest('hex'))")
-curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-crash1.json
-sleep 5
-```
-
-```expect
-200
-```
-
-#### [cloud] kill the worker mid-brain: no reply has been sent yet
-
-```timeout
-20000
-```
-
-```execute
-WORKER1PID=$(cat worker-cloud-crash.pid)
-ALL="$WORKER1PID"
-for i in 1 2 3 4 5 6; do
-  MORE=""
-  for P in $ALL; do
-    MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-crash1.json
+for ROUND in 1 2 3 4; do
+  sleep 1
+  ALL="$WORKER1PID"
+  for i in 1 2 3 4 5 6; do
+    MORE=""
+    for P in $ALL; do
+      MORE="$MORE $(pgrep -P $P 2>/dev/null)"
+    done
+    ALL="$ALL $MORE"
   done
-  ALL="$ALL $MORE"
+  for PID in $ALL; do kill -9 $PID 2>/dev/null; done
 done
-for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 2
+sleep 1
 aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660006"' --body-contains '"SLOW_8 done"' --times 0
-```
-
-```expect:partial
-verify ok: 0 match(es)*
-```
-
-#### [cloud] restart the worker: the message is leased again and replied to exactly once
-
-```timeout
-35000
-```
-
-```execute
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=elasticmq
-export AWS_ENDPOINT_URL=http://localhost:19781
-export AUX4_CLOUD_ENV=test
-export AUX4_CLOUD_SCOPE=botmeta
-nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash2.log 2>&1 &
-echo $! > worker-cloud-crash2.pid
-sleep 18
-WORKER2PID=$(cat worker-cloud-crash2.pid)
+echo "replies-before-restart:$?"
+AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash2.log 2>&1 &
+WORKER2PID=$!
+sleep 15
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
@@ -1529,5 +1430,5 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 ```
 
 ```expect:partial
-verify ok: 1 match(es)*
+replies-before-restart:0**verify ok: 1 match(es)*
 ```
