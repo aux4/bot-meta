@@ -31,9 +31,8 @@ config:
     tmpDir: "test-wa-tmp"
     dedupeTtl: 129600
     queue:
-      command: "queue"
+      provider: "memory"
       name: "bot.wa.e2e.test"
-      storage: "memory"
       db: ".queue.db"
       visibility: "30"
       maxAttempts: "5"
