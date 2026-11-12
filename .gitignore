@@ -3,6 +3,7 @@ package/lib/
 package/*.zip
 .bot/
 *.log
+*.pid
 .DS_Store
 *.tgz
 .env

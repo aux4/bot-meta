@@ -1,5 +1,35 @@
 # Release Notes
 
+## 0.1.8 (unreleased)
+
+BOT-018: extended `package/test/bot__whatsapp-e2e-providers.test.md`'s
+per-provider matrix (memory, repository, sqs, cloud) with the deeper
+failure/durability scenarios, through the real bot-meta/mock stack, for
+every provider where they apply:
+
+- brain failure -> retried up to `maxAttempts` -> `failureMessage` sent on
+  the final attempt -> the message ends up in the provider's dead-letter
+  queue (`aux4 queue dlq --provider <p>`).
+- a long-running brain under a short `visibility` is never redelivered,
+  thanks to the lease-renew heartbeat -- exactly one reply.
+- push mode (`POST /bot/work`): a failing push is retried by a work queue's
+  `--webhook` proxy until it succeeds. The proxy is a `memory`-storage-only
+  aux4/queue feature, so this is proven alongside every provider's own main
+  pipeline via a small dedicated memory queue pointed at that provider's
+  `/bot/work` route.
+- worker killed mid-brain -> restarted -> the message is leased again and
+  replied to exactly once (`repository`, `sqs`, `cloud` -- not `memory`,
+  which has no durable lease to resume from across a process restart).
+
+No code changes in this package. Two real bugs were found and fixed
+upstream while building the `sqs`/`cloud` scenarios (not in this package --
+see `aux4/queue-sqs` and `aux4/queue-cloud` release notes): `queue-sqs`'s
+`lease` reported SQS's raw 1-indexed `ApproximateReceiveCount` as `attempts`
+instead of the 0-indexed "attempts already made" convention every other
+provider uses, which made `aux4/bot`'s shared final-attempt check fire one
+delivery early and then again, sending `failureMessage` twice for the same
+event before the message was actually dead-lettered.
+
 ## 0.1.6
 
 BOT-018: added `package/test/bot__whatsapp-e2e-providers.test.md` -- the same
