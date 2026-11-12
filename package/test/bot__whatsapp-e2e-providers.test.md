@@ -588,7 +588,7 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15558880006","id":"wamid.REPOCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### restart the api/worker (short visibility) and send a slow message
+#### [repository] restart the api/worker (short visibility) and send a slow message
 
 ```timeout
 25000
@@ -612,7 +612,7 @@ sleep 5
 200
 ```
 
-#### kill the worker mid-brain: no reply has been sent yet
+#### [repository] kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
 20000
@@ -637,7 +637,7 @@ aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --bo
 verify ok: 0 match(es)*
 ```
 
-#### restart the worker: the message is leased again and replied to exactly once
+#### [repository] restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
 35000
@@ -1005,7 +1005,7 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15557770006","id":"wamid.SQSCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### restart the api/worker (short visibility) and send a slow message
+#### [sqs] restart the api/worker (short visibility) and send a slow message
 
 ```timeout
 25000
@@ -1033,7 +1033,7 @@ sleep 5
 200
 ```
 
-#### kill the worker mid-brain: no reply has been sent yet
+#### [sqs] kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
 20000
@@ -1058,7 +1058,7 @@ aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --bo
 verify ok: 0 match(es)*
 ```
 
-#### restart the worker: the message is leased again and replied to exactly once
+#### [sqs] restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
 35000
@@ -1444,7 +1444,7 @@ config:
 {"object":"whatsapp_business_account","entry":[{"id":"WABA1","changes":[{"field":"messages","value":{"messaging_product":"whatsapp","metadata":{"display_phone_number":"15550001111","phone_number_id":"PHONE123"},"messages":[{"from":"15556660006","id":"wamid.CLOUDCRASH1","timestamp":"1699999999","type":"text","text":{"body":"SLOW_8 done"}}]}}]}]}
 ```
 
-#### restart the api/worker (short visibility) and send a slow message
+#### [cloud] restart the api/worker (short visibility) and send a slow message
 
 ```timeout
 25000
@@ -1474,7 +1474,7 @@ sleep 5
 200
 ```
 
-#### kill the worker mid-brain: no reply has been sent yet
+#### [cloud] kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
 20000
@@ -1499,7 +1499,7 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 verify ok: 0 match(es)*
 ```
 
-#### restart the worker: the message is leased again and replied to exactly once
+#### [cloud] restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
 35000
