@@ -108,7 +108,8 @@ aux4 api stop 2>/dev/null
 aux4 queue stop --port 18751 2>/dev/null
 aux4 mock stop --port 18761 2>/dev/null
 pkill -f "bot-meta.mjs" 2>/dev/null
-pkill -f "bot.mjs worker" 2>/dev/null
+pkill -f "aux4 bot work" 2>/dev/null
+pkill -f "aux4 bot pull" 2>/dev/null
 rm -f test-wa-state.db queue.log api.log worker.log mock.log
 rm -rf test-wa-tmp
 true

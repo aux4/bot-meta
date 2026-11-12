@@ -83,8 +83,7 @@ aux4 api stop --port 18800 2>/dev/null
 aux4 queue stop --provider memory --port 18801 2>/dev/null
 aux4 mock stop --port 18802 2>/dev/null
 pkill -f "bot-meta.mjs" 2>/dev/null
-pkill -f "bot.mjs worker" 2>/dev/null
-pkill -f "bot work --mode pull" 2>/dev/null
+pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 rm -f test-wa-mem-state.db
 rm -rf test-wa-mem-tmp
@@ -218,8 +217,7 @@ process.stdout.write(process.argv[process.argv.length - 1]);
 aux4 api stop --port 18810 2>/dev/null
 aux4 mock stop --port 18812 2>/dev/null
 pkill -f "bot-meta.mjs" 2>/dev/null
-pkill -f "bot.mjs worker" 2>/dev/null
-pkill -f "bot work --mode pull" 2>/dev/null
+pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 rm -f test-wa-repo-state.db test-wa-repo-queue.db
 rm -rf test-wa-repo-tmp
@@ -357,8 +355,7 @@ aux4 queue delete --provider sqs --name bot-wa-sqs-test 2>/dev/null
 aux4 api stop --port 18820 2>/dev/null
 aux4 mock stop --port 18822 2>/dev/null
 pkill -f "bot-meta.mjs" 2>/dev/null
-pkill -f "bot.mjs worker" 2>/dev/null
-pkill -f "bot work --mode pull" 2>/dev/null
+pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 rm -f test-wa-sqs-state.db
 rm -rf test-wa-sqs-tmp
@@ -395,6 +392,10 @@ hs-sqs
 
 ### a signed message gets exactly one reply
 
+```timeout
+15000
+```
+
 ```execute
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
@@ -402,7 +403,7 @@ export AWS_DEFAULT_REGION=elasticmq
 export AWS_ENDPOINT_URL=http://localhost:19781
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-msg1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-msg1.json
-sleep 3
+sleep 5
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770001"' --body-contains '"hello sqs"' --times 1
 ```
 
@@ -412,10 +413,14 @@ aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --bo
 
 ### redelivering the same event id is not reprocessed
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-msg1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-msg1.json
-sleep 1
+sleep 2
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770001"' --body-contains '"hello sqs"' --times 1
 ```
 
@@ -517,8 +522,7 @@ aux4 queue delete --provider cloud --name bot-wa-cloud-test 2>/dev/null
 aux4 api stop --port 18830 2>/dev/null
 aux4 mock stop --port 18832 2>/dev/null
 pkill -f "bot-meta.mjs" 2>/dev/null
-pkill -f "bot.mjs worker" 2>/dev/null
-pkill -f "bot work --mode pull" 2>/dev/null
+pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 rm -f test-wa-cloud-state.db
 rm -rf test-wa-cloud-tmp
@@ -557,6 +561,10 @@ hs-cloud
 
 ### a signed message gets exactly one reply
 
+```timeout
+15000
+```
+
 ```execute
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
@@ -564,7 +572,7 @@ export AWS_DEFAULT_REGION=elasticmq
 export AWS_ENDPOINT_URL=http://localhost:19781
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-msg1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-msg1.json
-sleep 3
+sleep 5
 aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660001"' --body-contains '"hello cloud"' --times 1
 ```
 
@@ -574,10 +582,14 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 
 ### redelivering the same event id is not reprocessed
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-msg1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-msg1.json
-sleep 1
+sleep 2
 aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660001"' --body-contains '"hello cloud"' --times 1
 ```
 
