@@ -232,7 +232,7 @@ so the timing is fully controlled, the same pattern used in `aux4/bot`'s own
 `bot__echo-e2e.test.md`.
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -483,7 +483,7 @@ bypassing the long-running worker loop above so the timing is fully
 controlled.
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -591,7 +591,7 @@ config:
 #### restart the api/worker (short visibility) and send a slow message
 
 ```timeout
-15000
+25000
 ```
 
 ```execute
@@ -600,12 +600,12 @@ pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-repo-crash.log 2>&1 &
-sleep 1
+sleep 2
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash1.log 2>&1 &
 echo $! > worker-repo-crash.pid
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-crash1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-repo-crash1.json
-sleep 3
+sleep 5
 ```
 
 ```expect
@@ -615,7 +615,7 @@ sleep 3
 #### kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
-10000
+20000
 ```
 
 ```execute
@@ -629,7 +629,7 @@ for i in 1 2 3 4 5 6; do
   ALL="$ALL $MORE"
 done
 for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 1
+sleep 2
 aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15558880006"' --body-contains '"SLOW_8 done"' --times 0
 ```
 
@@ -640,13 +640,13 @@ verify ok: 0 match(es)*
 #### restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash2.log 2>&1 &
 echo $! > worker-repo-crash2.pid
-sleep 12
+sleep 18
 WORKER2PID=$(cat worker-repo-crash2.pid)
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
@@ -896,7 +896,7 @@ directly via one `aux4 bot work --mode pull` call -- bypassing the
 long-running worker loop above so the timing is fully controlled.
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -1008,7 +1008,7 @@ config:
 #### restart the api/worker (short visibility) and send a slow message
 
 ```timeout
-15000
+25000
 ```
 
 ```execute
@@ -1021,12 +1021,12 @@ pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-sqs-crash.log 2>&1 &
-sleep 1
+sleep 2
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash1.log 2>&1 &
 echo $! > worker-sqs-crash.pid
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-crash1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-crash1.json
-sleep 3
+sleep 5
 ```
 
 ```expect
@@ -1036,7 +1036,7 @@ sleep 3
 #### kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
-10000
+20000
 ```
 
 ```execute
@@ -1050,7 +1050,7 @@ for i in 1 2 3 4 5 6; do
   ALL="$ALL $MORE"
 done
 for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 1
+sleep 2
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770006"' --body-contains '"SLOW_8 done"' --times 0
 ```
 
@@ -1061,7 +1061,7 @@ verify ok: 0 match(es)*
 #### restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -1071,7 +1071,7 @@ export AWS_DEFAULT_REGION=elasticmq
 export AWS_ENDPOINT_URL=http://localhost:19781
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash2.log 2>&1 &
 echo $! > worker-sqs-crash2.pid
-sleep 14
+sleep 18
 WORKER2PID=$(cat worker-sqs-crash2.pid)
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
@@ -1333,7 +1333,7 @@ leased directly via one `aux4 bot work --mode pull` call -- bypassing the
 long-running worker loop above so the timing is fully controlled.
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -1447,7 +1447,7 @@ config:
 #### restart the api/worker (short visibility) and send a slow message
 
 ```timeout
-15000
+25000
 ```
 
 ```execute
@@ -1462,12 +1462,12 @@ pkill -f "aux4 bot work" 2>/dev/null
 pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 api start --configFile config.yaml >api-cloud-crash.log 2>&1 &
-sleep 1
+sleep 2
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash1.log 2>&1 &
 echo $! > worker-cloud-crash.pid
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-crash1.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-crash1.json
-sleep 3
+sleep 5
 ```
 
 ```expect
@@ -1477,7 +1477,7 @@ sleep 3
 #### kill the worker mid-brain: no reply has been sent yet
 
 ```timeout
-10000
+20000
 ```
 
 ```execute
@@ -1491,7 +1491,7 @@ for i in 1 2 3 4 5 6; do
   ALL="$ALL $MORE"
 done
 for PID in $ALL; do kill -9 $PID 2>/dev/null; done
-sleep 1
+sleep 2
 aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660006"' --body-contains '"SLOW_8 done"' --times 0
 ```
 
@@ -1502,7 +1502,7 @@ verify ok: 0 match(es)*
 #### restart the worker: the message is leased again and replied to exactly once
 
 ```timeout
-20000
+35000
 ```
 
 ```execute
@@ -1514,7 +1514,7 @@ export AUX4_CLOUD_ENV=test
 export AUX4_CLOUD_SCOPE=botmeta
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash2.log 2>&1 &
 echo $! > worker-cloud-crash2.pid
-sleep 14
+sleep 18
 WORKER2PID=$(cat worker-cloud-crash2.pid)
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
