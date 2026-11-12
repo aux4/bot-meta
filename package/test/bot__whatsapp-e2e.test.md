@@ -29,14 +29,20 @@ config:
     channels: ["whatsapp"]
     db: "test-wa-state.db"
     tmpDir: "test-wa-tmp"
-    queueName: "bot.wa.e2e.test"
-    queueUrl: "http://localhost:18751"
     dedupeTtl: 129600
+    queue:
+      command: "aux4 queue"
+      name: "bot.wa.e2e.test"
+      storage: "memory"
+      db: ".queue.db"
+      visibility: "30"
+      maxAttempts: "5"
+      port: "18751"
+      token: ""
     defaults:
       threadTtl: 3600
       replyTtl: 3600
       brainTimeout: 5000
-      brainRetries: 1
     bots:
       support:
         channel: whatsapp
@@ -128,7 +134,7 @@ aux4 mock stub --port 18761 --method GET --path /v27.0/MEDIA1 --status 200 --bod
 aux4 mock stub --port 18761 --method GET --path /cdn/MEDIA1.bin --status 200 --contentType application/octet-stream --body "downloaded-media-bytes" >/dev/null
 nohup aux4 queue start --port 18751 >queue.log 2>&1 &
 sleep 1
-aux4 queue create --port 18751 --name bot.wa.e2e.test >/dev/null
+aux4 queue create --port 18751 --name bot.wa.e2e.test --workQueue true --maxAttempts 5 >/dev/null
 nohup aux4 api start --configFile config.yaml >api.log 2>&1 &
 sleep 1
 nohup aux4 bot worker --configFile config.yaml --config bot >worker.log 2>&1 &
@@ -201,7 +207,7 @@ curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whats
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-text-body.json')).digest('hex'))")
 curl -s -w "\nHTTP:%{http_code}\n" -X POST "http://localhost:18750/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-text-body.json
-sleep 1.5
+sleep 3
 ```
 
 ```expect:partial
@@ -269,7 +275,7 @@ verify failed:*
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-batch-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-batch-body.json
-sleep 1.5
+sleep 3
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230011"' --body-contains '"batch one"'
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230012"' --body-contains '"batch two"'
 ```
@@ -285,7 +291,7 @@ aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-long-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/longbot/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-long-body.json
-sleep 1.5
+sleep 3
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230099"' --body-contains '"type":"text"' --times 2
 ```
 
@@ -300,7 +306,7 @@ aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-media-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/mediabot/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-media-body.json
-sleep 1.5
+sleep 3
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230088"' --body-contains 'downloaded-media-bytes'
 ```
 
