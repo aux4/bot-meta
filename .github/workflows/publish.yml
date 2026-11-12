@@ -91,7 +91,7 @@ jobs:
           build_command: npm run build
           # e2e tests stand in for the Meta Graph API with aux4/mock; queue-sqs/queue-cloud
           # provide the sqs/cloud --provider dispatch targets for the provider matrix e2e
-          packages: aux4/mock,aux4/queue-sqs,aux4/queue-cloud
+          packages: aux4/mock aux4/queue-sqs aux4/queue-cloud
 
   publish:
     needs: [lint, test-linux]
