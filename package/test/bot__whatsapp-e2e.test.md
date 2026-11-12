@@ -31,7 +31,7 @@ config:
     tmpDir: "test-wa-tmp"
     dedupeTtl: 129600
     queue:
-      command: "aux4 queue"
+      command: "queue"
       name: "bot.wa.e2e.test"
       storage: "memory"
       db: ".queue.db"

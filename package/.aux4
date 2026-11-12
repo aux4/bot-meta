@@ -4,7 +4,7 @@
   "version": "0.1.3",
   "description": "Meta (WhatsApp, Messenger, Instagram) channel plugin for aux4/bot",
   "dependencies": [
-    "aux4/bot"
+    "aux4/bot@>=0.2.3"
   ],
   "system": [
     [
