@@ -153,6 +153,7 @@ aux4 mock verify --port 18802 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG1=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-mem-ord1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18800/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG1" --data-binary @wa-mem-ord1.json
+sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-mem-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18800/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-mem-ord2.json
 sleep 5
@@ -286,6 +287,7 @@ aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG1=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-ord1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG1" --data-binary @wa-repo-ord1.json
+sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-repo-ord2.json
 sleep 5
@@ -445,6 +447,7 @@ aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG1=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-ord1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG1" --data-binary @wa-sqs-ord1.json
+sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-sqs-ord2.json
 sleep 5
@@ -614,6 +617,7 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 ```execute
 SIG1=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-ord1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG1" --data-binary @wa-cloud-ord1.json
+sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-cloud-ord2.json
 sleep 5
