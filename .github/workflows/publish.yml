@@ -63,6 +63,15 @@ jobs:
   test-linux:
     needs: [lint]
     runs-on: ubuntu-latest
+    # the sqs/cloud provider sections of bot__whatsapp-e2e-providers.test.md need a real
+    # SQS-API-compatible endpoint; ElasticMQ runs as a sibling service container on the
+    # job's network (aux4/action's test step has no Docker socket of its own), same
+    # pattern as aux4/queue-sqs and aux4/queue-cloud's own CI.
+    services:
+      elasticmq:
+        image: softwaremill/elasticmq-native
+        ports:
+          - 19781:9324
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -80,8 +89,9 @@ jobs:
         with:
           command: test
           build_command: npm run build
-          # e2e tests stand in for the Meta Graph API with aux4/mock
-          packages: aux4/mock
+          # e2e tests stand in for the Meta Graph API with aux4/mock; queue-sqs/queue-cloud
+          # provide the sqs/cloud --provider dispatch targets for the provider matrix e2e
+          packages: aux4/mock,aux4/queue-sqs,aux4/queue-cloud
 
   publish:
     needs: [lint, test-linux]

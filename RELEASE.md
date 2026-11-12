@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.1.6
+
+BOT-018: added `package/test/bot__whatsapp-e2e-providers.test.md` -- the same
+WhatsApp pipeline as `bot__whatsapp-e2e.test.md` (mock Graph API -> `aux4 api`
+-> `aux4 bot ingest` -> `aux4 queue` -> `aux4 bot worker` -> bot-meta `send` ->
+the mock records the reply), run once per `aux4/queue` provider (`memory`,
+`repository`, `sqs`, `cloud`) covering: a signed message gets exactly one
+reply, redelivering the same event id is not reprocessed, and two messages to
+the same chat get replies in the order sent. CI (`test-linux`) now installs
+`aux4/queue-sqs`/`aux4/queue-cloud` via the `packages:` input and runs
+ElasticMQ as a job-level `services:` container (same pattern as
+`aux4/queue-sqs`'s own CI) to back the `sqs`/`cloud` sections. No code
+changes; test + CI only.
+
 ## 0.1.1
 
 Review follow-up from the BOT-004 dev review.
