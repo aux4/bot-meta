@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.1.13
+
+The crash-resume scenario in each provider section (repository/sqs/cloud)
+used a fixed `sleep 15` to give the restarted worker time to finish the
+slow (8s-sleeping) brain before being killed for the test's own cleanup —
+a classic "fixed sleep where a poll-until-condition is needed" case: under
+CI load the full cycle (spawn worker, lease, spawn node, sleep 8s, send
+reply) can occasionally take longer than 15s, so the worker got killed
+before it sent the reply it was proven (one CI run) to otherwise complete.
+Replaced the fixed sleep with a poll loop (up to 25s) that breaks as soon
+as `aux4 mock verify` confirms the reply arrived, instead of widening the
+sleep constant. Verified locally: 3 consecutive green `providers` group
+runs (31/31 each), each now finishing in ~300-320s (down from ~326s) since
+the poll exits early once the reply lands.
+
 ## 0.1.12
 
 The provider-matrix CI job (0.1.11) still failed once on "Exceeded timeout
