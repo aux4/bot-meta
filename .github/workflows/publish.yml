@@ -60,19 +60,18 @@ jobs:
           command: lint
           strict: 'true'
 
-  # The combined test.suite.md (all 8 files, one ~400s single jest process,
+  # A combined test directory (all 8 files, one ~400s single jest process,
   # plus a job-level ElasticMQ container running for the whole job even
   # though only the provider matrix below needs it) was the source of
   # intermittent CI-only failures: under load, aux4 bot worker/queue/mock
   # processes from the big provider matrix starved the smaller e2e test that
   # ran after it, producing "mock verify: recorded 0 request(s)". Splitting
-  # into two independent jobs/runners removes that cross-file resource
-  # contention instead of widening more sleep constants.
+  # into two independent jobs/runners over two physical test directories
+  # (package/test/core, package/test/providers) removes that cross-file
+  # resource contention instead of widening more sleep constants.
   test-linux-core:
     needs: [lint]
     runs-on: ubuntu-latest
-    env:
-      AUX4_TEST_GROUP: core
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -85,38 +84,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run build
-
-      - name: Install aux4, pkger, jest, aux4/test, aux4/mock
-        run: |
-          curl -fsSL https://aux4.sh | sh
-          echo "$HOME/.aux4.config/packages/aux4/aux4" >> "$GITHUB_PATH"
-          export PATH="$HOME/.aux4.config/packages/aux4/aux4:$PATH"
-          curl -fsSL https://pkger.aux4.sh | sh
-          npm i -g jest
-          aux4 aux4 pkger install aux4/test
-          aux4 aux4 pkger install aux4/mock
-
-      - name: Package and install bot-meta for testing
-        working-directory: package
-        run: |
-          SCOPE=$(jq -r '.scope' .aux4)
-          NAME=$(jq -r '.name' .aux4)
-          VERSION=$(jq -r '.version' .aux4)
-          aux4 aux4 pkger build .
-          aux4 aux4 pkger install --fromFile "${SCOPE}_${NAME}_${VERSION}.zip"
-
       - name: Run core test group
-        run: |
-          cd "$HOME/.aux4.config/packages/aux4/bot-meta/test"
-          aux4 test run .
+        uses: aux4/action@v1
+        with:
+          command: test
+          build_command: npm run build
+          test_directory: test/core
+          packages: aux4/mock
 
   test-linux-providers:
     needs: [lint]
     runs-on: ubuntu-latest
-    env:
-      AUX4_TEST_GROUP: providers
     # the sqs/cloud provider sections of bot__whatsapp-e2e-providers.test.md need a real
     # SQS-API-compatible endpoint; ElasticMQ runs as a sibling service container on the
     # job's network, same pattern as aux4/queue-sqs and aux4/queue-cloud's own CI. Scoped
@@ -138,34 +116,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run build
-
-      - name: Install aux4, pkger, jest, aux4/test, aux4/mock, aux4/queue-sqs, aux4/queue-cloud
-        run: |
-          curl -fsSL https://aux4.sh | sh
-          echo "$HOME/.aux4.config/packages/aux4/aux4" >> "$GITHUB_PATH"
-          export PATH="$HOME/.aux4.config/packages/aux4/aux4:$PATH"
-          curl -fsSL https://pkger.aux4.sh | sh
-          npm i -g jest
-          aux4 aux4 pkger install aux4/test
-          aux4 aux4 pkger install aux4/mock
-          aux4 aux4 pkger install aux4/queue-sqs
-          aux4 aux4 pkger install aux4/queue-cloud
-
-      - name: Package and install bot-meta for testing
-        working-directory: package
-        run: |
-          SCOPE=$(jq -r '.scope' .aux4)
-          NAME=$(jq -r '.name' .aux4)
-          VERSION=$(jq -r '.version' .aux4)
-          aux4 aux4 pkger build .
-          aux4 aux4 pkger install --fromFile "${SCOPE}_${NAME}_${VERSION}.zip"
-
       - name: Run provider matrix test group
-        run: |
-          cd "$HOME/.aux4.config/packages/aux4/bot-meta/test"
-          aux4 test run .
+        uses: aux4/action@v1
+        with:
+          command: test
+          build_command: npm run build
+          test_directory: test/providers
+          packages: aux4/mock aux4/queue-sqs aux4/queue-cloud
 
   publish:
     needs: [lint, test-linux-core, test-linux-providers]
