@@ -30,6 +30,10 @@ is tracked as follow-up work, not attempted in this file.
 
 ## Provider: memory
 
+```timeout
+60000
+```
+
 ```file:config.yaml
 config:
   port: 18800
@@ -281,6 +285,10 @@ verify ok: 1 match(es)*
 ```
 
 ## Provider: repository
+
+```timeout
+60000
+```
 
 ```file:config.yaml
 config:
@@ -630,6 +638,10 @@ replies-before-restart:0**verify ok: 1 match(es)*
 ```
 
 ## Provider: sqs
+
+```timeout
+60000
+```
 
 ```file:config.yaml
 config:
@@ -1023,6 +1035,10 @@ verify ok: 1 match(es)*
 ```
 
 ## Provider: cloud
+
+```timeout
+60000
+```
 
 ```file:config.yaml
 config:
