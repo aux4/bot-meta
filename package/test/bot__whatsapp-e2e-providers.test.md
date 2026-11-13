@@ -129,13 +129,13 @@ true
 
 ```execute
 nohup aux4 mock start --port 18802 >mock-mem.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18802/
 aux4 mock stub --port 18802 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"x"}],"messages":[{"id":"wamid.MOCKSENT"}]}' >/dev/null
 nohup aux4 queue start --provider memory --port 18801 >queue-mem.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18801/
 aux4 queue create --provider memory --port 18801 --name bot.wa.mem.test --workQueue true --maxAttempts 5 >/dev/null
 nohup aux4 api start --configFile config.yaml >api-mem.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18800/
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-mem.log 2>&1 &
 sleep 1
 curl -s "http://localhost:18800/api/whatsapp/support/webhook?hub.mode=subscribe&hub.verify_token=verify-tok&hub.challenge=hs-mem"
@@ -383,10 +383,10 @@ true
 rm -f test-wa-repo-queue.db
 aux4 queue create --provider repository --db test-wa-repo-queue.db --name bot.wa.repo.test --maxAttempts 5 >/dev/null
 nohup aux4 mock start --port 18812 >mock-repo.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18812/
 aux4 mock stub --port 18812 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"x"}],"messages":[{"id":"wamid.MOCKSENT"}]}' >/dev/null
 nohup aux4 api start --configFile config.yaml >api-repo.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18810/
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo.log 2>&1 &
 echo $! > worker-repo.pid
 sleep 1
@@ -514,7 +514,7 @@ via a small dedicated memory queue server on its own port.
 
 ```execute
 nohup aux4 queue start --provider memory --port 18813 >queue-repo-push.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18813/
 aux4 queue create --provider memory --port 18813 --name bot.wa.repo.push --workQueue true --maxAttempts 3 --webhook http://localhost:18810/api/bot/work >/dev/null
 rm -f .echobot-marker-15558880005
 echo '{"channel":"whatsapp","botId":"support","event":{"key":"evt-repo-push-1","chatId":"15558880005","text":"FAIL_ONCE hi"}}' | aux4 queue send --provider memory --port 18813 --name bot.wa.repo.push --group 15558880005 >/dev/null
@@ -590,7 +590,7 @@ config:
 aux4 api stop --port 18810 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-repo-crash.log 2>&1 &
-sleep 2
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18810/
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash1.log 2>&1 &
 WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-crash1.json')).digest('hex'))")
@@ -735,11 +735,11 @@ true
 ### should start the mock, the sqs queue (ElasticMQ), the api server, and the worker
 
 ```timeout
-15000
+30000
 ```
 
 ```execute
-curl -s -o /dev/null http://localhost:19781 || (echo "ElasticMQ is not reachable on localhost:19781 -- start it first, see the top of this file" && exit 1)
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:19781 || (echo "ElasticMQ is not reachable on localhost:19781 -- start it first, see the top of this file" && exit 1)
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=elasticmq
@@ -747,10 +747,10 @@ export AWS_ENDPOINT_URL=http://localhost:19781
 aux4 queue delete --provider sqs --name bot-wa-sqs-test >/dev/null 2>&1
 aux4 queue create --provider sqs --name bot-wa-sqs-test --maxAttempts 5 >/dev/null
 nohup aux4 mock start --port 18822 >mock-sqs.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18822/
 aux4 mock stub --port 18822 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"x"}],"messages":[{"id":"wamid.MOCKSENT"}]}' >/dev/null
 nohup aux4 api start --configFile config.yaml >api-sqs.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18820/
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs.log 2>&1 &
 echo $! > worker-sqs.pid
 sleep 1
@@ -899,7 +899,7 @@ involved in this one).
 
 ```execute
 nohup aux4 queue start --provider memory --port 18823 >queue-sqs-push.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18823/
 aux4 queue create --provider memory --port 18823 --name bot.wa.sqs.push --workQueue true --maxAttempts 3 --webhook http://localhost:18820/api/bot/work >/dev/null
 rm -f .echobot-marker-15557770005
 echo '{"channel":"whatsapp","botId":"support","event":{"key":"evt-sqs-push-1","chatId":"15557770005","text":"FAIL_ONCE hi"}}' | aux4 queue send --provider memory --port 18823 --name bot.wa.sqs.push --group 15557770005 >/dev/null
@@ -979,7 +979,7 @@ export AWS_ENDPOINT_URL=http://localhost:19781
 aux4 api stop --port 18820 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-sqs-crash.log 2>&1 &
-sleep 2
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18820/
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash1.log 2>&1 &
 WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-crash1.json')).digest('hex'))")
@@ -1136,11 +1136,11 @@ true
 ### should start the mock, the cloud queue (ElasticMQ), the api server, and the worker
 
 ```timeout
-15000
+30000
 ```
 
 ```execute
-curl -s -o /dev/null http://localhost:19781 || (echo "ElasticMQ is not reachable on localhost:19781 -- start it first, see the top of this file" && exit 1)
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:19781 || (echo "ElasticMQ is not reachable on localhost:19781 -- start it first, see the top of this file" && exit 1)
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=elasticmq
@@ -1150,10 +1150,10 @@ export AUX4_CLOUD_SCOPE=botmeta
 aux4 queue delete --provider cloud --name bot-wa-cloud-test >/dev/null 2>&1
 aux4 queue create --provider cloud --name bot-wa-cloud-test --maxAttempts 5 >/dev/null
 nohup aux4 mock start --port 18832 >mock-cloud.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18832/
 aux4 mock stub --port 18832 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"x"}],"messages":[{"id":"wamid.MOCKSENT"}]}' >/dev/null
 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 api start --configFile config.yaml >api-cloud.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18830/
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud.log 2>&1 &
 echo $! > worker-cloud.pid
 sleep 1
@@ -1306,7 +1306,7 @@ involved in this one).
 
 ```execute
 nohup aux4 queue start --provider memory --port 18833 >queue-cloud-push.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18833/
 aux4 queue create --provider memory --port 18833 --name bot.wa.cloud.push --workQueue true --maxAttempts 3 --webhook http://localhost:18830/api/bot/work >/dev/null
 rm -f .echobot-marker-15556660005
 echo '{"channel":"whatsapp","botId":"support","event":{"key":"evt-cloud-push-1","chatId":"15556660005","text":"FAIL_ONCE hi"}}' | aux4 queue send --provider memory --port 18833 --name bot.wa.cloud.push --group 15556660005 >/dev/null
@@ -1388,7 +1388,7 @@ export AUX4_CLOUD_SCOPE=botmeta
 aux4 api stop --port 18830 2>/dev/null
 sleep 1
 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 api start --configFile config.yaml >api-cloud-crash.log 2>&1 &
-sleep 2
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18830/
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash1.log 2>&1 &
 WORKER1PID=$!
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-crash1.json')).digest('hex'))")

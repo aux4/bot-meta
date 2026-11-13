@@ -128,15 +128,15 @@ instead.
 rm -f test-wa-state.db
 rm -rf test-wa-tmp
 nohup aux4 mock start --port 18761 >mock.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18761/
 aux4 mock stub --port 18761 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"x"}],"messages":[{"id":"wamid.MOCKSENT"}]}' >/dev/null
 aux4 mock stub --port 18761 --method GET --path /v27.0/MEDIA1 --status 200 --body '{"url":"http://localhost:18761/api/cdn/MEDIA1.bin","mime_type":"application/octet-stream"}' >/dev/null
 aux4 mock stub --port 18761 --method GET --path /cdn/MEDIA1.bin --status 200 --contentType application/octet-stream --body "downloaded-media-bytes" >/dev/null
 nohup aux4 queue start --port 18751 >queue.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18751/
 aux4 queue create --port 18751 --name bot.wa.e2e.test --workQueue true --maxAttempts 5 >/dev/null
 nohup aux4 api start --configFile config.yaml >api.log 2>&1 &
-sleep 1
+curl -s --retry 20 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18750/
 nohup aux4 bot worker --configFile config.yaml --config bot >worker.log 2>&1 &
 sleep 1
 curl -s "http://localhost:18750/api/whatsapp/support/webhook?hub.mode=subscribe&hub.verify_token=verify-tok&hub.challenge=hs-wa-123"

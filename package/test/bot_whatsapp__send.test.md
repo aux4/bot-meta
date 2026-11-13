@@ -9,7 +9,7 @@ session window has elapsed.
 
 ```beforeAll
 nohup aux4 mock start --port 18763 >mock-send.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18763/
 ```
 
 ```afterAll

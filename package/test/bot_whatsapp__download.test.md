@@ -9,7 +9,7 @@ partially written to disk.
 
 ```beforeAll
 nohup aux4 mock start --port 18762 >mock-dl.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18762/
 aux4 mock stub --port 18762 --method GET --path /v27.0/MEDIA_OK --status 200 --body '{"url":"http://localhost:18762/api/cdn/MEDIA_OK.bin","mime_type":"application/octet-stream"}' >/dev/null
 aux4 mock stub --port 18762 --method GET --path /cdn/MEDIA_OK.bin --status 200 --contentType application/octet-stream --body "short" >/dev/null
 aux4 mock stub --port 18762 --method GET --path /v27.0/MEDIA_BIG --status 200 --body '{"url":"http://localhost:18762/api/cdn/MEDIA_BIG.bin","mime_type":"application/octet-stream"}' >/dev/null
