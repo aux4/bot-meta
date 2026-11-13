@@ -1,5 +1,18 @@
 # Release Notes
 
+## 0.1.12
+
+The provider-matrix CI job (0.1.11) still failed once on "Exceeded timeout
+of 5000 ms for a hook" on 2 of the 4 provider sections' `afterAll` — their
+real cleanup (AWS CLI `queue delete` calls against ElasticMQ, process
+kills) occasionally runs past jest's default 5s hook budget under CI load.
+Each `## Provider: X` heading's own `afterAll`/`beforeAll` only inherited
+jest's default unless a `timeout` block was set directly in that heading's
+own scope (not a descendant `###` test's `timeout`, which is independent).
+Added a `timeout: 60000` block directly under each of the 4 provider
+headings. Verified locally: 2 further consecutive green `providers` group
+runs (31/31 each, ~327s) on top of the 5 already recorded for 0.1.11.
+
 ## 0.1.11
 
 Split CI's `test-linux` job into two independent, parallel jobs
