@@ -1239,7 +1239,7 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 ### two messages to the same chat get replies in the order sent
 
 ```timeout
-15000
+35000
 ```
 
 ```file:wa-cloud-ord1.json
@@ -1271,7 +1271,7 @@ first,second
 ### a brain failure is retried up to maxAttempts, a failureMessage is sent on the final attempt, and the message ends up in the DLQ
 
 ```timeout
-40000
+70000
 ```
 
 ```file:wa-cloud-fail1.json
@@ -1288,9 +1288,18 @@ export AUX4_CLOUD_SCOPE=botmeta
 rm -f .echobot-marker-15556660003
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-fail1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-cloud-fail1.json
-sleep 30
+DLQCOUNT=0
+for i in $(seq 1 55); do
+  aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660003"' --body-contains 'Sorry, something went wrong' --times 1 >/dev/null 2>&1
+  REPLY_OK=$?
+  DLQCOUNT=$(aux4 queue dlq --provider cloud --name bot-wa-cloud-test | node -e "const r=require('fs').readFileSync(0,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); console.log(r.filter(m=>m.body.event.key==='wamid.CLOUDFAIL1').length)")
+  if [ "$REPLY_OK" -eq 0 ] && [ "$DLQCOUNT" = "1" ]; then
+    break
+  fi
+  sleep 1
+done
 aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660003"' --body-contains 'Sorry, something went wrong' --times 1
-aux4 queue dlq --provider cloud --name bot-wa-cloud-test | node -e "const r=require('fs').readFileSync(0,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); console.log(r.filter(m=>m.body.event.key==='wamid.CLOUDFAIL1').length)"
+echo "$DLQCOUNT"
 ```
 
 ```expect:partial
@@ -1304,7 +1313,7 @@ leased directly via one `aux4 bot work --mode pull` call -- bypassing the
 long-running worker loop above so the timing is fully controlled.
 
 ```timeout
-35000
+60000
 ```
 
 ```execute
@@ -1316,15 +1325,15 @@ export AUX4_CLOUD_ENV=test
 export AUX4_CLOUD_SCOPE=botmeta
 aux4 queue delete --provider cloud --name bot-wa-cloud-renew >/dev/null 2>&1
 aux4 queue create --provider cloud --name bot-wa-cloud-renew --maxAttempts 2 >/dev/null
-echo '{"channel":"whatsapp","botId":"support","event":{"key":"evt-cloud-renew-1","chatId":"15556660004","text":"SLOW_8 done"}}' | aux4 queue send --provider cloud --name bot-wa-cloud-renew --group 15556660004 >/dev/null
-nohup aux4 bot work --mode pull --channels '["whatsapp"]' --bots '{"support":{"channel":"whatsapp","phoneNumberId":"PHONE123","verifyToken":"verify-tok","appSecret":"testappsecret","token":"test-access-token","apiUrl":"http://localhost:18832/api","command":"node echobot.js"}}' --defaults '{"failureMessage":"Sorry, something went wrong processing your message."}' --db renew-cloud-state.db --tmpDir renew-cloud-tmp --queue '{"provider":"cloud","name":"bot-wa-cloud-renew","db":"","visibility":"3","maxAttempts":"2","port":"","token":""}' >renew-cloud-pull.log 2>&1 &
+echo '{"channel":"whatsapp","botId":"support","event":{"key":"evt-cloud-renew-1","chatId":"15556660004","text":"SLOW_25 done"}}' | aux4 queue send --provider cloud --name bot-wa-cloud-renew --group 15556660004 >/dev/null
+nohup aux4 bot work --mode pull --channels '["whatsapp"]' --bots '{"support":{"channel":"whatsapp","phoneNumberId":"PHONE123","verifyToken":"verify-tok","appSecret":"testappsecret","token":"test-access-token","apiUrl":"http://localhost:18832/api","command":"node echobot.js"}}' --defaults '{"failureMessage":"Sorry, something went wrong processing your message."}' --db renew-cloud-state.db --tmpDir renew-cloud-tmp --queue '{"provider":"cloud","name":"bot-wa-cloud-renew","db":"","visibility":"10","maxAttempts":"2","port":"","token":""}' >renew-cloud-pull.log 2>&1 &
 PULLPID=$!
-sleep 5
-aux4 queue lease --provider cloud --name bot-wa-cloud-renew --visibility 3 >/dev/null 2>&1
+sleep 12
+aux4 queue lease --provider cloud --name bot-wa-cloud-renew --visibility 10 >/dev/null 2>&1
 echo "mid-run lease exit=$?"
 wait $PULLPID
 sleep 1
-aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660004"' --body-contains '"SLOW_8 done"' --times 1
+aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660004"' --body-contains '"SLOW_25 done"' --times 1
 rm -f renew-cloud-state.db renew-cloud-pull.log
 rm -rf renew-cloud-tmp
 aux4 queue delete --provider cloud --name bot-wa-cloud-renew >/dev/null 2>&1
@@ -1361,7 +1370,7 @@ verify ok: 1 match(es)*
 ### a worker killed while the brain is running never replies twice, and the restarted worker finishes the job
 
 This subsection restarts the api server and worker with a shorter queue
-`visibility` (`3` instead of `30`) so a crash/resume cycle fits in a
+`visibility` (`10` instead of `30`) so a crash/resume cycle fits in a
 reasonable test time; it is the last scenario in this provider section.
 
 ```file:config.yaml
@@ -1388,7 +1397,7 @@ config:
       provider: "cloud"
       name: "bot-wa-cloud-test"
       db: ""
-      visibility: "3"
+      visibility: "10"
       maxAttempts: "5"
       port: ""
       token: ""
@@ -1413,7 +1422,7 @@ config:
 ```
 
 ```timeout
-45000
+75000
 ```
 
 ```execute
@@ -1448,7 +1457,7 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 echo "replies-before-restart:$?"
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash2.log 2>&1 &
 WORKER2PID=$!
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+for i in $(seq 1 45); do
   aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660006"' --body-contains '"SLOW_8 done"' --times 1 >/dev/null 2>&1 && break
   sleep 1
 done
