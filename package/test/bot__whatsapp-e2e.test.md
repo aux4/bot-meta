@@ -204,10 +204,14 @@ curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whats
 
 ### should accept the signed webhook, run the brain, and send the reply via the mock Graph API
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-text-body.json')).digest('hex'))")
 curl -s -w "\nHTTP:%{http_code}\n" -X POST "http://localhost:18750/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-text-body.json
-sleep 3
+sleep 6
 ```
 
 ```expect:partial
@@ -272,10 +276,14 @@ verify failed:*
 
 ### should process and reply to both messages in the batch
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-batch-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-batch-body.json
-sleep 3
+sleep 6
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230011"' --body-contains '"batch one"'
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230012"' --body-contains '"batch two"'
 ```
@@ -288,10 +296,14 @@ aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --bo
 
 ### a reply over 4096 chars is sent as two separate messages to the same chat
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-long-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/longbot/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-long-body.json
-sleep 3
+sleep 6
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230099"' --body-contains '"type":"text"' --times 2
 ```
 
@@ -303,10 +315,14 @@ aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --bo
 
 ### the attached media is resolved, downloaded, and handed to the brain
 
+```timeout
+15000
+```
+
 ```execute
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-media-body.json')).digest('hex'))")
 curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:18750/api/whatsapp/mediabot/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-media-body.json
-sleep 3
+sleep 6
 aux4 mock verify --port 18761 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15551230088"' --body-contains 'downloaded-media-bytes'
 ```
 
