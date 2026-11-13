@@ -35,7 +35,12 @@ package's README "WhatsApp setup" for the full Meta-side configuration walk
 - **`send`** — posts `{messaging_product:"whatsapp", to, type:"text",
   text:{body}}` to `POST {phoneNumberId}/messages`. Text exceeding
   WhatsApp's 4096-char limit is split into multiple sequential messages
-  (preferring a blank-line, then newline, then space boundary).
+  (preferring a blank-line, then newline, then space boundary). If Meta
+  rejects the send because the 24h free-form session window has elapsed
+  (Graph API error code `131047`), `send` refuses with a clear
+  `{ok:false, error}` pointing at `aux4 bot whatsapp send-template` instead
+  of surfacing Meta's own terse error text — this is what `aux4 bot send`
+  (aux4/bot core) and the worker's own best-effort reply path both see.
 
 These subcommands are invoked by the aux4/bot core (`aux4 bot verify`/
 `ingest`/`worker`) and are not meant to be run directly. For sending

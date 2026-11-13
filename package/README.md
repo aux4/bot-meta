@@ -166,6 +166,13 @@ blank line, then a newline, then a space.
 authenticated with `bot.token`. This only works within WhatsApp's 24-hour
 free-form session window (since the user's last message).
 
+**Outside that window, `send` refuses instead of silently failing.** Meta's
+Graph API rejects the send with error code `131047`; the plugin turns that
+into a clear `{ok:false, error}` pointing at `send-template` (below). This
+is what both `aux4 bot send` (aux4/bot core's ad hoc send command) and the
+worker's own best-effort automated reply see — `aux4 bot send` surfaces the
+error and exits `1`; the worker just logs it and moves on.
+
 ### Outside the 24h window: send-template
 
 ```bash
