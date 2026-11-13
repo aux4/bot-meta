@@ -1,5 +1,16 @@
 # Release Notes
 
+## 0.1.14
+
+Same class of fix as 0.1.13, different spot: each provider's "two
+messages to the same chat get replies in the order sent" test used a
+fixed `sleep 5` before checking message order — a real CI run showed
+only the first reply landing within that window for the cloud provider.
+Replaced the fixed sleep with a poll (up to 20s) that breaks as soon as
+both replies to that chat are recorded, instead of widening the sleep.
+Verified locally: 3 consecutive green `providers` group runs (31/31
+each, ~290-300s).
+
 ## 0.1.13
 
 The crash-resume scenario in each provider section (repository/sqs/cloud)

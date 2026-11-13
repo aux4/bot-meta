@@ -195,7 +195,11 @@ curl -s -o /dev/null -X POST "http://localhost:18800/api/whatsapp/support/webhoo
 sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-mem-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18800/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-mem-ord2.json
-sleep 5
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  COUNT=$(aux4 mock requests --port 18802 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); console.log(r.filter(x=>x.body.includes('15559990002')).length)")
+  [ "$COUNT" -ge 2 ] && break
+  sleep 1
+done
 aux4 mock requests --port 18802 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); const toThisChat=r.filter(x=>x.body.includes('15559990002')); console.log(toThisChat.map(x=>x.body.includes('first message')?'first':x.body.includes('second message')?'second':'other').join(','))"
 ```
 
@@ -451,7 +455,11 @@ curl -s -o /dev/null -X POST "http://localhost:18810/api/whatsapp/support/webhoo
 sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-repo-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18810/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-repo-ord2.json
-sleep 5
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  COUNT=$(aux4 mock requests --port 18812 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); console.log(r.filter(x=>x.body.includes('15558880002')).length)")
+  [ "$COUNT" -ge 2 ] && break
+  sleep 1
+done
 aux4 mock requests --port 18812 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); const toThisChat=r.filter(x=>x.body.includes('15558880002')); console.log(toThisChat.map(x=>x.body.includes('first message')?'first':x.body.includes('second message')?'second':'other').join(','))"
 ```
 
@@ -834,7 +842,11 @@ curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhoo
 sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-sqs-ord2.json
-sleep 5
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  COUNT=$(aux4 mock requests --port 18822 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); console.log(r.filter(x=>x.body.includes('15557770002')).length)")
+  [ "$COUNT" -ge 2 ] && break
+  sleep 1
+done
 aux4 mock requests --port 18822 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); const toThisChat=r.filter(x=>x.body.includes('15557770002')); console.log(toThisChat.map(x=>x.body.includes('first message')?'first':x.body.includes('second message')?'second':'other').join(','))"
 ```
 
@@ -1244,7 +1256,11 @@ curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhoo
 sleep 0.5
 SIG2=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-cloud-ord2.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18830/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG2" --data-binary @wa-cloud-ord2.json
-sleep 5
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  COUNT=$(aux4 mock requests --port 18832 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); console.log(r.filter(x=>x.body.includes('15556660002')).length)")
+  [ "$COUNT" -ge 2 ] && break
+  sleep 1
+done
 aux4 mock requests --port 18832 --method POST --path /v27.0/PHONE123/messages | node -e "const r=JSON.parse(require('fs').readFileSync(0,'utf8')); const toThisChat=r.filter(x=>x.body.includes('15556660002')); console.log(toThisChat.map(x=>x.body.includes('first message')?'first':x.body.includes('second message')?'second':'other').join(','))"
 ```
 
