@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.1.20 (unreleased)
+
+- CI's `providers` test group now installs `aux4/cloud-queue` instead of the renamed
+  `aux4/queue-cloud` (which moved to `aux4/cloud-queue` to match aux4's `cloud-` prefix
+  convention); README/test text updated to match.
+- Same class of fix as 0.1.14, applied to the `sqs` provider's DLQ test: "a brain failure is
+  retried up to maxAttempts, a failureMessage is sent on the final attempt, and the message ends
+  up in the DLQ" used a fixed `sleep 30` and failed once on CI (the failureMessage had already
+  been sent, but the DLQ count wasn't 1 yet — SQS redrive only moves a message on its next
+  receive). Replaced the fixed sleep with the same poll-until-condition loop (up to 55s) the
+  `cloud` section's own DLQ test already uses, checking both the reply via `aux4 mock verify` and
+  the DLQ count == 1; raised the test's timeout to 70000 to fit. The assertion itself is
+  unchanged. `memory`/`repository`/`cloud` are untouched.
+
 ## 0.1.14
 
 Same class of fix as 0.1.13, different spot: each provider's "two
@@ -109,7 +123,7 @@ every provider where they apply:
 
 No code changes in this package. Two real bugs were found and fixed
 upstream while building the `sqs`/`cloud` scenarios (not in this package --
-see `aux4/queue-sqs` and `aux4/queue-cloud` release notes): `queue-sqs`'s
+see `aux4/queue-sqs` and `aux4/cloud-queue` release notes): `queue-sqs`'s
 `lease` reported SQS's raw 1-indexed `ApproximateReceiveCount` as `attempts`
 instead of the 0-indexed "attempts already made" convention every other
 provider uses, which made `aux4/bot`'s shared final-attempt check fire one
@@ -125,7 +139,7 @@ the mock records the reply), run once per `aux4/queue` provider (`memory`,
 `repository`, `sqs`, `cloud`) covering: a signed message gets exactly one
 reply, redelivering the same event id is not reprocessed, and two messages to
 the same chat get replies in the order sent. CI (`test-linux`) now installs
-`aux4/queue-sqs`/`aux4/queue-cloud` via the `packages:` input and runs
+`aux4/queue-sqs`/`aux4/cloud-queue` via the `packages:` input and runs
 ElasticMQ as a job-level `services:` container (same pattern as
 `aux4/queue-sqs`'s own CI) to back the `sqs`/`cloud` sections. No code
 changes; test + CI only.

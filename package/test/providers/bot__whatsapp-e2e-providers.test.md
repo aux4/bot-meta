@@ -4,14 +4,14 @@ The SAME WhatsApp pipeline as `bot__whatsapp-e2e.test.md` (mock Graph API ->
 `aux4 api` -> `aux4 bot ingest` -> `aux4 queue` -> `aux4 bot worker` -> bot-meta
 `send` -> the mock records the reply), run once per `aux4/queue` provider:
 `memory`, `repository`, `sqs` (ElasticMQ), and `cloud` (ElasticMQ, via
-`aux4/queue-cloud`'s env+scope naming). Each provider section covers the same
+`aux4/cloud-queue`'s env+scope naming). Each provider section covers the same
 three core scenarios:
 
 1. a signed message gets exactly one reply,
 2. redelivering the same event id is not reprocessed, and
 3. two messages sent to the same chat get replies in the order sent.
 
-`sqs` and `cloud` require `aux4/queue-sqs` and `aux4/queue-cloud` installed
+`sqs` and `cloud` require `aux4/queue-sqs` and `aux4/cloud-queue` installed
 (the CI workflow's `packages:` input does this) and an ElasticMQ server
 reachable at `http://localhost:19781` (started as a job-level `services:`
 container in CI; locally, start it yourself first):
@@ -857,7 +857,7 @@ first,second
 ### a brain failure is retried up to maxAttempts, a failureMessage is sent on the final attempt, and the message ends up in the DLQ
 
 ```timeout
-40000
+70000
 ```
 
 ```file:wa-sqs-fail1.json
@@ -872,9 +872,18 @@ export AWS_ENDPOINT_URL=http://localhost:19781
 rm -f .echobot-marker-15557770003
 SIG=$(node -e "console.log(require('crypto').createHmac('sha256','testappsecret').update(require('fs').readFileSync('wa-sqs-fail1.json')).digest('hex'))")
 curl -s -o /dev/null -X POST "http://localhost:18820/api/whatsapp/support/webhook" -H "Content-Type: application/json" -H "x-hub-signature-256: sha256=$SIG" --data-binary @wa-sqs-fail1.json
-sleep 30
+DLQCOUNT=0
+for i in $(seq 1 55); do
+  aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770003"' --body-contains 'Sorry, something went wrong' --times 1 >/dev/null 2>&1
+  REPLY_OK=$?
+  DLQCOUNT=$(aux4 queue dlq --provider sqs --name bot-wa-sqs-test | node -e "const r=require('fs').readFileSync(0,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); console.log(r.filter(m=>m.body.event.key==='wamid.SQSFAIL1').length)")
+  if [ "$REPLY_OK" -eq 0 ] && [ "$DLQCOUNT" = "1" ]; then
+    break
+  fi
+  sleep 1
+done
 aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770003"' --body-contains 'Sorry, something went wrong' --times 1
-aux4 queue dlq --provider sqs --name bot-wa-sqs-test | node -e "const r=require('fs').readFileSync(0,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); console.log(r.filter(m=>m.body.event.key==='wamid.SQSFAIL1').length)"
+echo "$DLQCOUNT"
 ```
 
 ```expect:partial
@@ -1352,7 +1361,7 @@ a small dedicated memory queue server on its own port (no AWS/ElasticMQ
 involved in this one).
 
 ```execute
-nohup aux4 queue start --provider memory --port 18833 >queue-cloud-push.log 2>&1 &
+nohup aux4 queue start --provider memory --port 18833 >cloud-queue-push.log 2>&1 &
 curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18833/
 aux4 queue create --provider memory --port 18833 --name bot.wa.cloud.push --workQueue true --maxAttempts 3 --webhook http://localhost:18830/api/bot/work >/dev/null
 rm -f .echobot-marker-15556660005

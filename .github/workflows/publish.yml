@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     # the sqs/cloud provider sections of bot__whatsapp-e2e-providers.test.md need a real
     # SQS-API-compatible endpoint; ElasticMQ runs as a sibling service container on the
-    # job's network, same pattern as aux4/queue-sqs and aux4/queue-cloud's own CI. Scoped
+    # job's network, same pattern as aux4/queue-sqs and aux4/cloud-queue's own CI. Scoped
     # to this job only — the core group above never needs it.
     services:
       elasticmq:
@@ -122,7 +122,7 @@ jobs:
           command: test
           build_command: npm run build
           test_directory: test/providers
-          packages: aux4/mock aux4/queue-sqs aux4/queue-cloud
+          packages: aux4/mock aux4/queue-sqs aux4/cloud-queue
 
   publish:
     needs: [lint, test-linux-core, test-linux-providers]
