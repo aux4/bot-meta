@@ -1,5 +1,25 @@
 # Release Notes
 
+## 0.1.10
+
+Fixed the real root cause of the intermittent CI test-linux failures (not a
+timing/sleep issue): `package/test/bot_whatsapp__download.test.md` and
+`package/test/bot_whatsapp__send-template.test.md` both started an
+`aux4/mock` server on the SAME hardcoded port (`18762`) with no `--name`,
+which also makes them share the same on-disk mock state directory
+(`/tmp/aux4-mock/18762`, keyed purely by port). Whenever the first file's
+server hadn't fully released the port before the second file's `beforeAll`
+tried to rebind it (more likely under CI's load/resource contention),
+`send-template`'s own stub/verify traffic landed on a stale or dead mock
+process, producing exactly the previously-reported symptoms: `mock verify:
+recorded 0 request(s)` and, when the stale process had actually died,
+`connection refused`. Moved `send-template`'s test to its own port (`18764`)
+so every server across the whole test suite now has a unique port. Verified
+with 5 consecutive full local `aux4 test run` passes (73/73 each, reproduced
+faithfully in an isolated `HOME` sandbox with the package pkger-installed
+from a built zip, matching CI's install-then-test model) and no leaked
+server processes between runs.
+
 ## 0.1.9
 
 BOT-012 part B: the WhatsApp channel plugin's `send` now refuses with a

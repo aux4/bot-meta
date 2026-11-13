@@ -11,19 +11,19 @@ invoked by `aux4 bot ingest`/`worker`.
     "channel": "whatsapp",
     "phoneNumberId": "PHONE123",
     "token": "test-access-token",
-    "apiUrl": "http://localhost:18762/api"
+    "apiUrl": "http://localhost:18764/api"
   }
 }
 ```
 
 ```beforeAll
-nohup aux4 mock start --port 18762 >mock-template.log 2>&1 &
+nohup aux4 mock start --port 18764 >mock-template.log 2>&1 &
 sleep 1
-aux4 mock stub --port 18762 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"15551234567"}],"messages":[{"id":"wamid.TEMPLATESENT"}]}' >/dev/null
+aux4 mock stub --port 18764 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"15551234567"}],"messages":[{"id":"wamid.TEMPLATESENT"}]}' >/dev/null
 ```
 
 ```afterAll
-aux4 mock stop --port 18762 2>/dev/null
+aux4 mock stop --port 18764 2>/dev/null
 rm -f mock-template.log
 true
 ```
@@ -55,7 +55,7 @@ aux4 bot whatsapp send-template support --bots "$(cat bots.json)" --to 155512345
 ### the mock recorded the template request with its components
 
 ```execute
-aux4 mock verify --port 18762 --method POST --path /v27.0/PHONE123/messages --body-contains '"name":"order_shipped"' --body-contains '"code":"en_US"' --body-contains 'Order #4821'
+aux4 mock verify --port 18764 --method POST --path /v27.0/PHONE123/messages --body-contains '"name":"order_shipped"' --body-contains '"code":"en_US"' --body-contains 'Order #4821'
 ```
 
 ```expect:partial
