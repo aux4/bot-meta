@@ -18,7 +18,7 @@ invoked by `aux4 bot ingest`/`worker`.
 
 ```beforeAll
 nohup aux4 mock start --port 18764 >mock-template.log 2>&1 &
-sleep 1
+curl -s --retry 10 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:18764/
 aux4 mock stub --port 18764 --method POST --path /v27.0/PHONE123/messages --status 200 --body '{"messaging_product":"whatsapp","contacts":[{"wa_id":"15551234567"}],"messages":[{"id":"wamid.TEMPLATESENT"}]}' >/dev/null
 ```
 
