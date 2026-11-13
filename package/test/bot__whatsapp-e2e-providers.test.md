@@ -620,7 +620,10 @@ aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --bo
 echo "replies-before-restart:$?"
 nohup aux4 bot worker --configFile config.yaml --config bot >worker-repo-crash2.log 2>&1 &
 WORKER2PID=$!
-sleep 15
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+  aux4 mock verify --port 18812 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15558880006"' --body-contains '"SLOW_8 done"' --times 1 >/dev/null 2>&1 && break
+  sleep 1
+done
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
@@ -1013,7 +1016,10 @@ aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --bo
 echo "replies-before-restart:$?"
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 nohup aux4 bot worker --configFile config.yaml --config bot >worker-sqs-crash2.log 2>&1 &
 WORKER2PID=$!
-sleep 15
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+  aux4 mock verify --port 18822 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15557770006"' --body-contains '"SLOW_8 done"' --times 1 >/dev/null 2>&1 && break
+  sleep 1
+done
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
@@ -1426,7 +1432,10 @@ aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --bo
 echo "replies-before-restart:$?"
 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=elasticmq AWS_ENDPOINT_URL=http://localhost:19781 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 bot worker --configFile config.yaml --config bot >worker-cloud-crash2.log 2>&1 &
 WORKER2PID=$!
-sleep 15
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+  aux4 mock verify --port 18832 --method POST --path /v27.0/PHONE123/messages --body-contains '"to":"15556660006"' --body-contains '"SLOW_8 done"' --times 1 >/dev/null 2>&1 && break
+  sleep 1
+done
 ALL="$WORKER2PID"
 for i in 1 2 3 4 5 6; do
   MORE=""
