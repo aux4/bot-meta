@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.1.11
+
+Split CI's `test-linux` job into two independent, parallel jobs
+(`test-linux-core`, `test-linux-providers`) via a new `package/test/test.suite.md`.
+Even with the port-collision and readiness-poll fixes from 0.1.10, two
+real CI runs still reproduced the historical flake: `bot__whatsapp-e2e.test.md`
+(the smaller single-provider file, which always runs LAST alphabetically)
+got zero delivered messages across the board whenever it ran right after
+the much larger `bot__whatsapp-e2e-providers.test.md` matrix on the same
+runner/job — the combined suite ran as one ~400s single jest process on a
+job that also kept an ElasticMQ service container alive for its entire
+duration (even during the sections that don't need it). Each group now
+runs on its own fresh GitHub Actions runner; `test-linux-providers` keeps
+the ElasticMQ service (scoped to only the job that needs it),
+`test-linux-core` no longer carries that overhead at all. Verified locally:
+5 consecutive runs of each group independently green (`core`: 42/42 in
+~37s; `providers`: 31/31 in ~326s).
+
 ## 0.1.10
 
 Fixed the real root cause of the intermittent CI test-linux failures (not a
