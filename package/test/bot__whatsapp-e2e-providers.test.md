@@ -588,8 +588,6 @@ config:
 
 ```execute
 aux4 api stop --port 18810 2>/dev/null
-pkill -f "aux4 bot work" 2>/dev/null
-pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-repo-crash.log 2>&1 &
 sleep 2
@@ -979,8 +977,6 @@ export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=elasticmq
 export AWS_ENDPOINT_URL=http://localhost:19781
 aux4 api stop --port 18820 2>/dev/null
-pkill -f "aux4 bot work" 2>/dev/null
-pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 nohup aux4 api start --configFile config.yaml >api-sqs-crash.log 2>&1 &
 sleep 2
@@ -1390,8 +1386,6 @@ export AWS_ENDPOINT_URL=http://localhost:19781
 export AUX4_CLOUD_ENV=test
 export AUX4_CLOUD_SCOPE=botmeta
 aux4 api stop --port 18830 2>/dev/null
-pkill -f "aux4 bot work" 2>/dev/null
-pkill -f "aux4 bot pull" 2>/dev/null
 sleep 1
 AUX4_CLOUD_ENV=test AUX4_CLOUD_SCOPE=botmeta nohup aux4 api start --configFile config.yaml >api-cloud-crash.log 2>&1 &
 sleep 2
