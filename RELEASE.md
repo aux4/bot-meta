@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.1.9
+
+BOT-012 part B: the WhatsApp channel plugin's `send` now refuses with a
+clear, actionable error instead of a bare `{ok:false}` when Meta's Graph
+API rejects a message because the 24h free-form session window has
+elapsed (error code `131047`) — pointing at `aux4 bot whatsapp
+send-template`. This is what aux4/bot core's new `aux4 bot send` (ad hoc
+sends) and the worker's own best-effort reply path both see.
+
 ## 0.1.8 (unreleased)
 
 BOT-018: extended `package/test/bot__whatsapp-e2e-providers.test.md`'s
