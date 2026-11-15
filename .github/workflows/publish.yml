@@ -95,10 +95,10 @@ jobs:
   test-linux-providers:
     needs: [lint]
     runs-on: ubuntu-latest
-    # the sqs/cloud provider sections of bot__whatsapp-e2e-providers.test.md need a real
+    # the sqs provider section of bot__whatsapp-e2e-providers.test.md needs a real
     # SQS-API-compatible endpoint; ElasticMQ runs as a sibling service container on the
-    # job's network, same pattern as aux4/queue-sqs and aux4/cloud-queue's own CI. Scoped
-    # to this job only — the core group above never needs it.
+    # job's network, same pattern as aux4/queue-sqs's own CI. Scoped to this job only —
+    # the core group above never needs it.
     services:
       elasticmq:
         image: softwaremill/elasticmq-native
@@ -122,10 +122,48 @@ jobs:
           command: test
           build_command: npm run build
           test_directory: test/providers
+          packages: aux4/mock aux4/queue-sqs
+
+  # aux4/cloud-queue stays off the prod hub until launch (2026-11-15 decision), so main's
+  # CI must never try to install it — that's exactly why its coverage lives in its own
+  # test_directory, only ever run here, gated to the dev branch.
+  test-linux-providers-cloud:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'dev'
+    services:
+      elasticmq:
+        image: softwaremill/elasticmq-native
+        ports:
+          - 19781:9324
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run cloud provider test group
+        uses: aux4/action@v1
+        with:
+          command: test
+          build_command: npm run build
+          test_directory: test/providers-cloud
           packages: aux4/mock aux4/queue-sqs aux4/cloud-queue
 
   publish:
-    needs: [lint, test-linux-core, test-linux-providers]
+    needs: [lint, test-linux-core, test-linux-providers, test-linux-providers-cloud]
+    if: >-
+      always() &&
+      needs.lint.result == 'success' &&
+      needs.test-linux-core.result == 'success' &&
+      needs.test-linux-providers.result == 'success' &&
+      (needs.test-linux-providers-cloud.result == 'success' || needs.test-linux-providers-cloud.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
