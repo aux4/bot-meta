@@ -199,6 +199,11 @@ test suite can point this plugin at a local mock server instead of
 `https://graph.facebook.com`. Production deployments should leave both
 unset (defaults: `https://graph.facebook.com`, `v27.0`).
 
+**Note:** the `aux4/queue` provider matrix this plugin is exercised against
+(`memory`, `repository`, `sqs`) is proven end to end on every branch; the
+`cloud` provider (`aux4/cloud-queue`) is proven on `dev` only, since
+`aux4/cloud-queue` is not yet published to the production package hub.
+
 ## License
 
 Apache-2.0
