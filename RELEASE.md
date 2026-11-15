@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.1.24 (unreleased)
+
+- Split `test/providers/bot__whatsapp-e2e-providers.test.md`'s `cloud` provider section into its
+  own standalone file, `test/providers-cloud/bot__whatsapp-e2e-providers-cloud.test.md` (fixtures,
+  echobot, afterAll cleanup all moved with it — no assertion changes). `main`'s CI installs
+  packages from the production hub, and `aux4/cloud-queue` stays off that hub until launch
+  (2026-11-15 decision), so main's prior combined test run always failed to install it. The
+  remaining `memory`/`repository`/`sqs` providers run standalone in `test/providers` on every
+  branch.
+- `.github/workflows/publish.yml`: added a `test-linux-providers-cloud` job (`test_directory:
+  test/providers-cloud`, installs `aux4/mock aux4/queue-sqs aux4/cloud-queue`), gated to
+  `github.ref_name == 'dev'` only. `publish` now also depends on this job but treats a `skipped`
+  result (i.e. on `main`) the same as `success`, so `main` keeps publishing without ever touching
+  `aux4/cloud-queue`.
+
 ## 0.1.20 (unreleased)
 
 - CI's `providers` test group now installs `aux4/cloud-queue` instead of the renamed
