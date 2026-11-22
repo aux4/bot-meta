@@ -150,8 +150,38 @@ node -e 'const value={contacts:[{wa_id:"two",profile:{name:"Grace"}},{wa_id:"one
 
 ```expect:json
 [
-  {"key":"a","kind":"message","chatId":"one","userId":"one","sender":{"displayName":"Ada"},"text":"hello","files":[],"ttl":129600},
-  {"key":"b","kind":"message","chatId":"two","userId":"two","sender":{"displayName":"Grace"},"text":"","files":[],"ttl":129600},
-  {"key":"c","kind":"message","chatId":"missing","userId":"missing","text":"","files":[],"ttl":129600}
+  {
+    "key": "a",
+    "kind": "message",
+    "chatId": "one",
+    "userId": "one",
+    "sender": {
+      "displayName": "Ada"
+    },
+    "text": "hello",
+    "files": [],
+    "ttl": 129600
+  },
+  {
+    "key": "b",
+    "kind": "message",
+    "chatId": "two",
+    "userId": "two",
+    "sender": {
+      "displayName": "Grace"
+    },
+    "text": "",
+    "files": [],
+    "ttl": 129600
+  },
+  {
+    "key": "c",
+    "kind": "message",
+    "chatId": "missing",
+    "userId": "missing",
+    "text": "",
+    "files": [],
+    "ttl": 129600
+  }
 ]
 ```
