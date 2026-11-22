@@ -139,3 +139,19 @@ node -e "console.log(JSON.stringify({bot:{},rawBody:'not json'}))" | aux4 bot wh
 ```expect:json
 []
 ```
+
+## sender profile
+
+### contact names match their own sender, not contact array order
+
+```execute
+node -e 'const value={contacts:[{wa_id:"two",profile:{name:"Grace"}},{wa_id:"one",profile:{name:"Ada"}}],messages:[{id:"a",from:"one",text:{body:"hello"}},{id:"b",from:"two"},{id:"c",from:"missing"}]};console.log(JSON.stringify({rawBody:JSON.stringify({entry:[{changes:[{value}]}]})}))' | aux4 bot whatsapp ingest-parse
+```
+
+```expect:json
+[
+  {"key":"a","kind":"message","chatId":"one","userId":"one","sender":{"displayName":"Ada"},"text":"hello","files":[],"ttl":129600},
+  {"key":"b","kind":"message","chatId":"two","userId":"two","sender":{"displayName":"Grace"},"text":"","files":[],"ttl":129600},
+  {"key":"c","kind":"message","chatId":"missing","userId":"missing","text":"","files":[],"ttl":129600}
+]
+```

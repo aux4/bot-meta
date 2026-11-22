@@ -207,3 +207,6 @@ unset (defaults: `https://graph.facebook.com`, `v27.0`).
 ## License
 
 Apache-2.0
+
+
+WhatsApp message events include optional `sender: { displayName }`, matched by the message sender's `wa_id` in the same webhook change. A profile name is user-controlled, not verified identity. Missing contacts leave the field absent.
